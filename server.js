@@ -1,15 +1,9 @@
 const app=require('./app');
 const dotenv=require('dotenv');
 const connectDatabase=require('./config/database');
-const cors = require('cors');
-// app.use(cors())
-// const cors = require('cors');
-// const corsOptions ={
-//     origin:'http://localhost:3000', 
-//     credentials:true,            //access-control-allow-credentials:true
-//     optionSuccessStatus:200
-// }
-// app.use(cors(corsOptions));
+
+
+
 
 process.on("uncaughtException",(err)=>{
     console.log(`Error:${err.message}`);
