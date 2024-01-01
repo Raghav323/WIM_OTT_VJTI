@@ -9,4 +9,5 @@ router.route("/new").post(newCourse);
 router.route("/:id").put(updateCourse);
 router.route("/buy").post(buyCourse);
 
+
 module.exports = router;
