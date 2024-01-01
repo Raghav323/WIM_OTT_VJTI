@@ -221,7 +221,7 @@ exports.deleteUserCourse = catchAsyncErrors(async (req, res, next) => {
     // Find the user by ID
     console.log(req.body);
     const user = await User.findById(req.body.userId);
-
+    const course = await Course.findById(req.body.courseId);
     if (!user) {
         return next(new errorHandler(`User does not exist with id: ${req.body.DateuserId}`, 400));
     }
@@ -235,9 +235,12 @@ exports.deleteUserCourse = catchAsyncErrors(async (req, res, next) => {
 
     // Remove the course from the user's enrolled courses array
     user.coursesEnrolled.splice(courseIndex, 1);
+    // Update the number of students enrolled in the course
+    course.studentsEnrolled = course.studentsEnrolled - 1;
 
     // Save the updated user data
     await user.save();
+    await course.save();
 
     res.status(200).json({
         success: true,
