@@ -102,3 +102,4 @@ exports.buyCourse = catchAsyncErrors(async (req, res, next) => {
         next(new errorHandler(error.message, 500));
     }
 });
+

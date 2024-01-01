@@ -530,6 +530,82 @@ exports.generatePDF = catchAsyncErrors(async (req, res, next) => {
     }
 });
 
+exports.generateReport = catchAsyncErrors(async (req, res, next) => {
+    try {
+        const {name, email, phone,orderIdList,paymentIdList,courseList} = req.body;
+        const url = `https://api.placid.app/api/rest/pdfs`;
+        let body = {
+            "pages": [
+                {
+                    "template_uuid": "o9o4qjfuhrvza",
+                    "layers": {
+                        "name": {
+                            "text": name
+                        },
+                        "email": {
+                            "text": email
+                        },
+                        "phone": {
+                            "text": phone
+                        },
+                        "orderId": {
+                            "text": orderIdList.join(", ")
+                        },
+                        "paymentId": {
+                            "text": paymentIdList.join(", ")
+                        },
+                        "courses":{
+                            "text":  courseList.join(", ")
+                        }
+                    }
+                }
+            ]
+        }
+        const config = {
+            headers: {
+                "Authorization": "Bearer placid-td6hdny44kuhvjkx-b6dqz2cnuuucmzp3",
+                "Content-Type": "application/json"
+            }
+          };
+        
+        const response = await axios.post(url, body, config);
+        console.log(response.data);
+        res.status(200).json({
+            success: true,
+            message: `Report generated successfully`,
+            data: response.data
+        })
+    } catch (error) {
+        console.error('Error Generating Report: ', error);
+        // Handle errors and redirect to an error page or send an error response
+        next(new errorHandler(error.message, 500));
+    }
+});
+
+exports.retrieveReport = catchAsyncErrors(async (req, res, next) => {
+    try {
+        const url = `https://api.placid.app/api/rest/pdfs/${req.body.id}`;
+        const config = {
+            headers: {
+                "Authorization": "Bearer placid-td6hdny44kuhvjkx-b6dqz2cnuuucmzp3",
+                "Content-Type": "application/json"
+            }
+          };
+        
+        const response = await axios.get(url, config);
+        console.log(response.data);
+        res.status(200).json({
+            success: true,
+            message: `Report retrieved successfully`,
+            data: response.data
+        })
+    } catch (error) {
+        console.error('Error Retrieving PDF: ', error);
+        // Handle errors and redirect to an error page or send an error response
+        next(new errorHandler(error.message, 500));
+    }
+});
+
 exports.retrievePDF = catchAsyncErrors(async (req, res, next) => {
     try {
         const url = `https://api.placid.app/api/rest/pdfs/${req.body.id}`;
