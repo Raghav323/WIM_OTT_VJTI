@@ -64,6 +64,30 @@ exports.newCourse = catchAsyncErrors(async (req, res, next) => {
     }
 });
 
+// update course   =>   /api/courses/:id
+exports.updateCourse = catchAsyncErrors(async (req, res, next) => {
+    try {
+        let course = await Course.findById(req.params.id);
+        if (!course) {
+            return next(new errorHandler('Course not found', 404));
+        }
+        course = await Course.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true,
+            useFindAndModify: false
+        });
+        res.status(200).json({
+            success: true,
+            message: `Course updated successfully`,
+            data: course
+        })
+    } catch (error) {
+        console.error('Error Updating Course: ', error);
+        // Handle errors and redirect to an error page or send an error response
+        next(new errorHandler(error.message, 500));
+    }
+});
+
 exports.buyCourse = catchAsyncErrors(async (req, res, next) => {
     try {
         const { courseId, userId, payment_id, order_id, signature } = req.body;
