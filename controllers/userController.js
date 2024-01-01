@@ -215,6 +215,58 @@ exports.deleteUser = catchAsyncErrors(async (req, res, next) => {
     sendToken(user, 200, res);
 });
 
+//delete user course
+exports.deleteUserCourse = catchAsyncErrors(async (req, res, next) => {
+
+    // Find the user by ID
+    console.log(req.body);
+    const user = await User.findById(req.body.userId);
+
+    if (!user) {
+        return next(new errorHandler(`User does not exist with id: ${req.body.DateuserId}`, 400));
+    }
+
+    // Find the index of the course in the user's enrolled courses
+    const courseIndex = user.coursesEnrolled.findIndex(course => course.courseId.toString() === req.body.courseId);
+
+    if (courseIndex === -1) {
+        return next(new errorHandler(`Course does not exist with id: ${req.body.courseId} for the user with id: ${req.body.userId}`, 400));
+    }
+
+    // Remove the course from the user's enrolled courses array
+    user.coursesEnrolled.splice(courseIndex, 1);
+
+    // Save the updated user data
+    await user.save();
+
+    res.status(200).json({
+        success: true,
+        message: 'Course deleted successfully',
+        user: user.coursesEnrolled,
+    });
+});
+
+
+//find user by courseid 
+
+
+exports.getUsersByCourseId = catchAsyncErrors(async (req, res, next) => {
+    const courseId = req.params.id;
+
+    // Find all users who are enrolled in the specified course, excluding the 'coursesEnrolled' field
+    const users = await User.find({ 'coursesEnrolled.courseId': courseId }, { coursesEnrolled: 0 });
+
+    if (!users || users.length === 0) {
+        return next(new errorHandler(`No users found for course with id: ${courseId}`, 404));
+    }
+
+    res.status(200).json({
+        success: true,
+        users,
+    });
+});
+
+
 exports.sendEmail = catchAsyncErrors(async (req, res, next) => {
 
 
