@@ -53,6 +53,33 @@ const courseSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+
+  // assignments: [
+  //   {
+  //     QuestionAnswers: [
+  //       {
+  //         question: {
+  //           type: String,
+  //           required: true,
+  //         },
+
+  //         options: [
+  //           {
+  //             option: {
+  //               type: String,
+  //               required: true,
+  //             },
+  //           },
+  //         ],
+  //         answer: {
+  //           type: String,
+  //           required: true,
+  //         },
+  //       },
+  //     ],
+     
+  //   },
+  // ],
 });
 
 const Course = mongoose.model('Course', courseSchema);

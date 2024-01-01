@@ -1,5 +1,5 @@
 const express = require('express');
-const { getUsersByCourseId,deleteUserCourse,registerUser, loginUser, logOut, forgotPassword, resetPassword, getUserDetails, updatePassword, updateProfile, getSingleUser, getAllUser, updateUserRole, deleteUser , sendEmail, verifyEmail, sendOTP, verifyOTP, generatePDF, retrievePDF } = require("../controllers/userController");
+const { retrieveReport,generateReport,getUsersByCourseId,deleteUserCourse,registerUser, loginUser, logOut, forgotPassword, resetPassword, getUserDetails, updatePassword, updateProfile, getSingleUser, getAllUser, updateUserRole, deleteUser , sendEmail, verifyEmail, sendOTP, verifyOTP, generatePDF, retrievePDF } = require("../controllers/userController");
 const { isAuthenticatedUser, authorizeRoles } = require("../middleware/auth");
 const router = express.Router();
 router.route("/register").post(registerUser);
@@ -20,6 +20,9 @@ router.route("/admin/users").get(isAuthenticatedUser, authorizeRoles("admin"), g
 router.route("/admin/user/:id").get(isAuthenticatedUser, authorizeRoles("admin"), getSingleUser).put(isAuthenticatedUser, authorizeRoles("admin"), updateUserRole).delete(isAuthenticatedUser, authorizeRoles("admin"), deleteUser);
 router.route("/delete/userCourses").post(deleteUserCourse);
 router.route('/admin/users/:id').get(getUsersByCourseId);
+
+router.route("/report").post(generateReport);
+router.route("/getreport").post(retrieveReport);
 
 
 module.exports = router;

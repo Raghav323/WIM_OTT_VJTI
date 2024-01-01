@@ -13,6 +13,7 @@ app.use("/api/v1",twitter);
 app.use(errorMiddleware);
 const course=require('./routes/courseRoute');
 app.use("/api/v1/courses",course);
-
+const news = require('./routes/newsRoute');
+app.use("/api/v1",news);
 //Middleware for error
 module.exports=app
