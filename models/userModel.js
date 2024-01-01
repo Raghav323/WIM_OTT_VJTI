@@ -3,6 +3,7 @@ const validator = require("validator");
 const bcrypt=require('bcryptjs');
 const jwt=require("jsonwebtoken");
 const crypto=require("crypto");
+const Course = require("./coursesModel");
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -36,6 +37,52 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: "user",
   },
+  phone: {
+    type: String,
+    maxLength: [10, "Phone Number cannot exceed 10 characters"],
+    minLength: [10, "Phone Number should have 10 characters"],
+    default: null,
+  },
+  email_verified: {
+    type: Boolean,
+    default: false,
+  },
+  phone_verified: {
+    type: Boolean,
+    default: false,
+  },
+  otp:{
+    type:String,
+    default:-1
+  },
+  coursesEnrolled: [
+    {
+      courseId: {
+        type: mongoose.Schema.ObjectId,
+        ref: "Course",
+      },
+      payment_id: {
+        type: String,
+        required: true,
+      },
+      order_id: {
+        type: String,
+        required: true,
+      },
+      signature: {
+        type: String,
+        required: true,
+      },
+      course: {
+        type: Object,
+        required: true,
+      },
+      isCompleted: {
+        type: Boolean,
+        default: false,
+      },
+    },
+  ],
   createdAt: {
     type: Date,
     default: Date.now,

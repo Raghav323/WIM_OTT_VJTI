@@ -11,6 +11,8 @@ app.use("/api/v1",user);
 const twitter=require('./routes/twitterRoute');
 app.use("/api/v1",twitter);
 app.use(errorMiddleware);
+const course=require('./routes/courseRoute');
+app.use("/api/v1/courses",course);
 
 //Middleware for error
 module.exports=app

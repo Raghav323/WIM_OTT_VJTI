@@ -5,15 +5,28 @@ const sendToken = require('../utils/jwttoken');
 const sendEmail = require('../utils/sendEmail');
 const crypto = require("crypto");
 const nodemailer = require('nodemailer');
+const otpModel = require('../models/otpModel');
 const v1beta2 = require("@google-ai/generativelanguage").v1beta2;
 const GoogleAuth = require("google-auth-library").GoogleAuth;
+const twilio = require('twilio');
+const axios = require('axios');
 
 // const getResetPasswordToken=require('../models/userModel')
 //register user
+function generateOTP() {
+    // Generate a random 6-digit number
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    return otp.toString();
+}
+
+const accountSid = 'AC63ab774766cfa85fc82ed515a4bdae12';
+const authToken = "43fed78ab10f9c8fc5261f08339a8467"
+const client = new twilio(accountSid, authToken);
+
 exports.registerUser = catchAsyncErrors(async (req, res, next) => {
     const { name, email, password } = req.body;
     const user = await User.create({
-        name, email, password,
+        name, email, password, otp:generateOTP(),
         avatar: {
             public_id: "this is a sample id",
             url: "profilepicUrl"
@@ -107,7 +120,7 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
 
 });
 exports.getUserDetails = catchAsyncErrors(async (req, res, next) => {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.body.id);
     res.status(200).json({
         success: true,
         user,
@@ -322,6 +335,169 @@ exports.handleTwitterCallback = async (req, res, next) => {
         next(new errorHandler(error.message, 500));
     }
 };
+
+// verify email using otp
+
+exports.verifyEmail = catchAsyncErrors(async (req, res, next) => {
+    try {
+        const {email,otp}=req.body;
+        const user = await User.findOne({ email });
+        if (!user) {
+            return next(new errorHandler("User not found", 404));
+        }
+        if (user.otp?.toString() !== otp?.toString()) {
+            return next(new errorHandler("Invalid OTP", 401));
+        }
+        user.email_verified=true;
+        await user.save();
+        res.status(200).json({
+            success: true,
+            message: `Email verified successfully`
+        })
+    } catch (error) {
+        console.error('Error Verifying Email: ', error);
+        // Handle errors and redirect to an error page or send an error response
+        next(new errorHandler(error.message, 500));
+    }
+})
+
+exports.sendOTP = catchAsyncErrors(async (req, res, next) => {
+    try {
+        const {phone, email}=req.body;
+        const otp = generateOTP();
+        const otpData = new otpModel({
+            phone,
+            otp
+        });
+        await otpData.save();
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return next(new errorHandler("User not found", 404));
+        }
+        user.phone=phone;
+        await user.save();
+
+        client.messages
+            .create({
+                body: `Your OTP for registration is ${otp}`,
+                from: '+14403680987',
+                to: `+91${phone}`
+            })
+            .then(message => {
+                console.log(message.sid)
+                res.status(200).json({
+                    success: true,
+                    message: `OTP sent successfully`
+                })})
+            .catch(err => {
+                console.log(err)
+                res.status(500).json({
+                    success: false,
+                    message: `OTP not sent`
+                })
+            });
+       
+
+    } catch (error) {
+        console.error('Error Sending OTP: ', error);
+        // Handle errors and redirect to an error page or send an error response
+        next(new errorHandler(error.message, 500));
+    }
+})
+
+exports.verifyOTP = catchAsyncErrors(async (req, res, next) => {
+    try {
+        const {phone,otp}=req.body;
+        const otpData = await otpModel.findOne({ phone });
+        const user = await User.findOne({ phone });
+        if (!otpData) {
+            return next(new errorHandler("User not found", 404));
+        }
+        if (otpData.otp?.toString() !== otp?.toString()) {
+            return next(new errorHandler("Invalid OTP", 401));
+        }
+        user.phone_verified=true;
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: `OTP verified successfully`
+        })
+        
+    } catch (error) {
+        console.error('Error Verifying OTP: ', error);
+        // Handle errors and redirect to an error page or send an error response
+        next(new errorHandler(error.message, 500));
+    }
+})
+
+exports.generatePDF = catchAsyncErrors(async (req, res, next) => {
+    try {
+        const {name, desc, date} = req.body;
+        const url = `https://api.placid.app/api/rest/pdfs`;
+        let body = {
+            "pages": [
+                {
+                    "template_uuid": "mb35p8z4ly5pi",
+                    "layers": {
+                        "name": {
+                            "text": name
+                        },
+                        "description": {
+                            "text": desc
+                        },
+                        "date": {
+                            "text": date
+                        }
+                    }
+                }
+            ]
+        }
+        const config = {
+            headers: {
+                "Authorization": "Bearer placid-k2kli7z7ji0rh8ie-aahniz31hdqzkoq7",
+                "Content-Type": "application/json"
+            }
+          };
+        
+        const response = await axios.post(url, body, config);
+        console.log(response.data);
+        res.status(200).json({
+            success: true,
+            message: `PDF generated successfully`,
+            data: response.data
+        })
+    } catch (error) {
+        console.error('Error Generating PDF: ', error);
+        // Handle errors and redirect to an error page or send an error response
+        next(new errorHandler(error.message, 500));
+    }
+});
+
+exports.retrievePDF = catchAsyncErrors(async (req, res, next) => {
+    try {
+        const url = `https://api.placid.app/api/rest/pdfs/${req.body.id}`;
+        const config = {
+            headers: {
+                "Authorization": "Bearer placid-k2kli7z7ji0rh8ie-aahniz31hdqzkoq7",
+                "Content-Type": "application/json"
+            }
+          };
+        
+        const response = await axios.get(url, config);
+        console.log(response.data);
+        res.status(200).json({
+            success: true,
+            message: `PDF retrieved successfully`,
+            data: response.data
+        })
+    } catch (error) {
+        console.error('Error Retrieving PDF: ', error);
+        // Handle errors and redirect to an error page or send an error response
+        next(new errorHandler(error.message, 500));
+    }
+});
 
 // Handle the Twitter OAuth callback
 
