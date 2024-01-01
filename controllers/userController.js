@@ -586,10 +586,11 @@ exports.retrieveReport = catchAsyncErrors(async (req, res, next) => {
     try {
         const url = `https://api.placid.app/api/rest/pdfs/${req.body.id}`;
         const config = {
-            headers: {
-                "Authorization": "Bearer placid-td6hdny44kuhvjkx-b6dqz2cnuuucmzp3",
+            
+               headers:{ "Authorization": "Bearer placid-td6hdny44kuhvjkx-b6dqz2cnuuucmzp3",
                 "Content-Type": "application/json"
             }
+            
           };
         
         const response = await axios.get(url, config);
